@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.27.0] - 2024-07-16
+
+[1.27.0]: https://pypi.org/project/beanie/1.27.0
+
+
 Beanie project
 
 ## [1.26.0] - 2024-05-01
