@@ -8,8 +8,11 @@ from beanie.odm.enums import SortDirection
 from tests.odm.models import (
     Color,
     DocumentWithBsonEncodersFiledsTypes,
+    Door,
     House,
+    Lock,
     Sample,
+    Window,
 )
 
 
@@ -311,7 +314,8 @@ async def test_find_many_with_session(preset_documents, session):
 
 async def test_bson_encoders_filed_types():
     custom = DocumentWithBsonEncodersFiledsTypes(
-        color="7fffd4", timestamp=datetime.datetime.utcnow()
+        color="7fffd4",
+        timestamp=datetime.datetime.now(tz=datetime.timezone.utc),
     )
     c = await custom.insert()
     c_fromdb = await DocumentWithBsonEncodersFiledsTypes.find_one(
@@ -321,8 +325,12 @@ async def test_bson_encoders_filed_types():
 
 
 async def test_find_by_datetime(preset_documents):
-    datetime_1 = datetime.datetime.utcnow() - datetime.timedelta(days=7)
-    datetime_2 = datetime.datetime.utcnow() - datetime.timedelta(days=2)
+    datetime_1 = datetime.datetime.now(
+        tz=datetime.timezone.utc
+    ) - datetime.timedelta(days=7)
+    datetime_2 = datetime.datetime.now(
+        tz=datetime.timezone.utc
+    ) - datetime.timedelta(days=2)
     docs = await Sample.find(
         Sample.timestamp >= datetime_1,
         Sample.timestamp <= datetime_2,
@@ -331,12 +339,13 @@ async def test_find_by_datetime(preset_documents):
 
 
 async def test_find_first_or_none(preset_documents):
-    doc = (
-        await Sample.find(Sample.increment > 1)
-        .sort(-Sample.increment)
-        .first_or_none()
-    )
+    q = Sample.find(Sample.increment > 1).sort(-Sample.increment)
+    doc = await q.first_or_none()
+    assert doc is not None
     assert doc.increment == 9
+
+    docs = await q.to_list()
+    assert len(docs) == 8
 
     doc = (
         await Sample.find(Sample.increment > 9)
@@ -417,3 +426,26 @@ async def test_find_many_with_enum_in_query(preset_documents):
     }
     result = await Sample.find_many(filter_query).to_list()
     assert len(result) == 2
+
+
+# @pytest.mark.asyncio
+async def test_fetch_links_with_chained_delete():
+    lock = await Lock(k=123).insert()
+    window = await Window(x=1, y=2, lock=lock).insert()
+    door = await Door(t=10, window=window, locks=[lock]).insert()
+
+    await House(windows=[window], door=door, height=10, name="test").insert()
+    await House(windows=[window], door=door, height=12, name="test2").insert()
+
+    # Deletion with chained query and fetch_links
+    deleted_count = (
+        await House.find(House.height > 5, fetch_links=True)
+        .find(House.height < 20)
+        .delete()
+    )
+
+    assert deleted_count.deleted_count == 2
+
+    # Confirm deletion
+    remaining = await House.find_all().to_list()
+    assert len(remaining) == 0

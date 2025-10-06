@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from motor.motor_asyncio import AsyncIOMotorCollection
+from pymongo.asynchronous.collection import AsyncCollection
 
 from beanie.odm.settings.base import ItemSettings
 
@@ -12,12 +12,12 @@ class OtherGettersInterface:
         pass
 
     @classmethod
-    def get_motor_collection(cls) -> AsyncIOMotorCollection:
-        return cls.get_settings().motor_collection
+    def get_pymongo_collection(cls) -> AsyncCollection:
+        return cls.get_settings().pymongo_collection
 
     @classmethod
-    def get_collection_name(cls):
-        return cls.get_settings().name
+    def get_collection_name(cls) -> str:
+        return cls.get_settings().name  # type: ignore
 
     @classmethod
     def get_bson_encoders(cls):

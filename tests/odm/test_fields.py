@@ -19,6 +19,7 @@ from tests.odm.models import (
     DocumentWithBsonEncodersFiledsTypes,
     DocumentWithCustomFiledsTypes,
     DocumentWithDeprecatedHiddenField,
+    DocumentWithExcludedField,
     Sample,
 )
 
@@ -42,7 +43,8 @@ def test_pydantic_object_id_bytes_input():
 
 async def test_bson_encoders_filed_types():
     custom = DocumentWithBsonEncodersFiledsTypes(
-        color="7fffd4", timestamp=datetime.datetime.utcnow()
+        color="7fffd4",
+        timestamp=datetime.datetime.now(tz=datetime.timezone.utc),
     )
     encoded = get_dict(custom)
     assert isinstance(encoded["timestamp"], str)
@@ -110,14 +112,19 @@ async def test_custom_filed_types():
 
 
 async def test_excluded(document):
-    document = await DocumentTestModel.find_one()
+    doc = DocumentWithExcludedField(included_field=1, excluded_field=2)
+    await doc.insert()
+    stored_doc = await DocumentWithExcludedField.get(doc.id)
+    assert stored_doc is not None
     if IS_PYDANTIC_V2:
-        assert "test_list" not in document.model_dump()
+        assert "included_field" in stored_doc.model_dump()
+        assert "excluded_field" not in stored_doc.model_dump()
     else:
-        assert "test_list" not in document.dict()
+        assert "included_field" in stored_doc.dict()
+        assert "excluded_field" not in stored_doc.dict()
 
 
-async def test_hidden():
+async def test_hidden(deprecated_init_beanie):
     document = DocumentWithDeprecatedHiddenField(test_hidden=["abc", "def"])
     await document.insert()
     document = await DocumentWithDeprecatedHiddenField.find_one()

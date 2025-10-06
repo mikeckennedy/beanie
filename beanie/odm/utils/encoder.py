@@ -24,7 +24,11 @@ import pydantic
 
 import beanie
 from beanie.odm.fields import Link, LinkTypes
-from beanie.odm.utils.pydantic import IS_PYDANTIC_V2, get_model_fields
+from beanie.odm.utils.pydantic import (
+    IS_PYDANTIC_V2,
+    IS_PYDANTIC_V2_10,
+    get_model_fields,
+)
 
 SingleArgCallable = Callable[[Any], Any]
 DEFAULT_CUSTOM_ENCODERS: MutableMapping[type, SingleArgCallable] = {
@@ -51,6 +55,11 @@ if IS_PYDANTIC_V2:
 
     DEFAULT_CUSTOM_ENCODERS[Url] = str
 
+if IS_PYDANTIC_V2_10:
+    from pydantic import AnyUrl
+
+    DEFAULT_CUSTOM_ENCODERS[AnyUrl] = str
+
 BSON_SCALAR_TYPES = (
     type(None),
     str,
@@ -63,6 +72,7 @@ BSON_SCALAR_TYPES = (
     bson.MaxKey,
     bson.MinKey,
     bson.ObjectId,
+    bson.Regex,
 )
 
 
@@ -73,6 +83,7 @@ class Encoder:
     """
 
     exclude: Container[str] = frozenset()
+    include: Container[str] = frozenset()
     custom_encoders: Mapping[type, SingleArgCallable] = dc.field(
         default_factory=dict
     )
@@ -144,14 +155,38 @@ class Encoder:
     def _iter_model_items(
         self, obj: pydantic.BaseModel
     ) -> Iterable[Tuple[str, Any]]:
-        exclude, keep_nulls = self.exclude, self.keep_nulls
+        keep_nulls = self.keep_nulls
         get_model_field = get_model_fields(obj).get
         for key, value in obj.__iter__():
             field_info = get_model_field(key)
             if field_info is not None:
                 key = field_info.alias or key
-            if key not in exclude and (value is not None or keep_nulls):
+            if not self._should_exclude_field(key, field_info) and (
+                value is not None or keep_nulls
+            ):
                 yield key, value
+
+    def _should_exclude_field(
+        self, key: str, field_info: Optional[pydantic.fields.FieldInfo]
+    ):
+        exclude, include = (
+            self.exclude,
+            self.include,
+        )
+
+        if key in include:
+            return False
+
+        is_pydantic_excluded_field = (
+            field_info is not None
+            and (
+                field_info.exclude
+                if IS_PYDANTIC_V2
+                else getattr(field_info.field_info, "exclude")
+            )
+            is True
+        )
+        return key in exclude or is_pydantic_excluded_field
 
 
 def _get_encoder(

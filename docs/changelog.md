@@ -7,6 +7,221 @@
 
 Beanie project
 
+## [2.0.0] - 2025-07-09
+### Transform asyncdocmethod[doctype, p, r] into any to fix "incorrect call arguments" warning in pycharm
+- Author - [hRtWzFe](https://github.com/hRtWzFe)
+- PR <https://github.com/BeanieODM/beanie/pull/1166>
+### Fix typos in migrations docs
+- Author - [Rishat-F](https://github.com/Rishat-F)
+- PR <https://github.com/BeanieODM/beanie/pull/1136>
+### Motor -> async pymongo
+- Author - [roman-right](https://github.com/roman-right)
+- PR <https://github.com/BeanieODM/beanie/pull/1113>
+
+[2.0.0]: https://pypi.org/project/beanie/2.0.0
+
+## [1.30.0] - 2025-06-10
+### Docs: update backlink usage of original_field for pydantic v2
+- Author - [scarlet2131](https://github.com/scarlet2131)
+- PR <https://github.com/BeanieODM/beanie/pull/1183>
+### Fix: first_or_none no longer mutates findmany object (#1116)
+- Author - [egorzh01](https://github.com/egorzh01)
+- PR <https://github.com/BeanieODM/beanie/pull/1178>
+### Migration finder skips modules starting with underscore
+- Author - [unexceptable](https://github.com/unexceptable)
+- PR <https://github.com/BeanieODM/beanie/pull/1177>
+### Docs: update incorrect event-based actions docs
+- Author - [kaperont](https://github.com/kaperont)
+- PR <https://github.com/BeanieODM/beanie/pull/1163>
+### Fix: deprecate bucket_rounding_second in favor of bucket_rounding_seconds in timeseriesconfig
+- Author - [m00rex](https://github.com/m00rex)
+- PR <https://github.com/BeanieODM/beanie/pull/1162>
+### Switch to precommit ci
+- Author - [07pepa](https://github.com/07pepa)
+- PR <https://github.com/BeanieODM/beanie/pull/1160>
+### Drop py3.8 support
+- Author - [roman-right](https://github.com/roman-right)
+- PR <https://github.com/BeanieODM/beanie/pull/1159>
+### Update toml dependency to use tomli instead of toml
+- Author - [Taaku18](https://github.com/Taaku18)
+- PR <https://github.com/BeanieODM/beanie/pull/1144>
+### Fix failing tests in ci
+- Author - [staticxterm](https://github.com/staticxterm)
+- PR <https://github.com/BeanieODM/beanie/pull/1141>
+### Fix find type hint for filter args
+- Author - [CAPITAINMARVEL](https://github.com/CAPITAINMARVEL)
+- PR <https://github.com/BeanieODM/beanie/pull/1139>
+### Fixed attributeerror in merge_model when updating document
+- Author - [mattewid](https://github.com/mattewid)
+- PR <https://github.com/BeanieODM/beanie/pull/1126>
+### Fix bulkwriter.__init__ bug when it has object_class param input
+- Author - [hagd0520](https://github.com/hagd0520)
+- PR <https://github.com/BeanieODM/beanie/pull/1107>
+### Change schema generation for pydanticobjectid
+- Author - [dantetemplar](https://github.com/dantetemplar)
+- PR <https://github.com/BeanieODM/beanie/pull/1099>
+### Add deduplication of entries to changelog script
+- Author - [staticxterm](https://github.com/staticxterm)
+- PR <https://github.com/BeanieODM/beanie/pull/1081>
+
+[1.30.0]: https://pypi.org/project/beanie/1.30.0
+
+## [1.29.0] - 2025-01-06
+### Fix serialization of link/backlink and openapi schema generation
+- Author - [staticxterm](https://github.com/staticxterm)
+- PR <https://github.com/BeanieODM/beanie/pull/1080>
+### Fix: `owner` model missing in `init_beanie` in inheritance documentation's inserts example
+- Author - [ksayer](https://github.com/ksayer)
+- PR <https://github.com/BeanieODM/beanie/pull/1090>
+### Make `diacritic_sensitive` parameter optional to support $text operator on cosmos db
+- Author - [mykolaskrynnyk](https://github.com/mykolaskrynnyk)
+- PR <https://github.com/BeanieODM/beanie/pull/1089>
+### Add tests with case of {id} in fastapi path
+- Author - [dantetemplar](https://github.com/dantetemplar)
+- PR <https://github.com/BeanieODM/beanie/pull/1100>
+### Use strings to specify mongodb versions in ci
+- Author - [Viicos](https://github.com/Viicos)
+- PR <https://github.com/BeanieODM/beanie/pull/1094>
+### fix: pydantic 2.10.x breaking change
+- Author - [mdaffad](https://github.com/mdaffad)
+- PR <https://github.com/BeanieODM/beanie/pull/1095>
+### Bulk writer improving & bulk_writer method for document and possibility to bypass mongo document validation + comment parameter
+- Author - [CAPITAINMARVEL](https://github.com/CAPITAINMARVEL)
+- PR <https://github.com/BeanieODM/beanie/pull/1079>
+### Add coverage configuration to pyproject.toml
+- Author - [staticxterm](https://github.com/staticxterm)
+- PR <https://github.com/BeanieODM/beanie/pull/1091>
+
+[1.29.0]: https://pypi.org/project/beanie/1.29.0
+
+## [1.28.0] - 2024-12-05
+### Fix kwargs/args untyped
+- Author - [CAPITAINMARVEL](https://github.com/CAPITAINMARVEL)
+- PR <https://github.com/BeanieODM/beanie/pull/1049>
+### Update pre-commit
+- Author - [07pepa](https://github.com/07pepa)
+- PR <https://github.com/BeanieODM/beanie/pull/1046>
+### Drop support for python 3.7
+- Author - [07pepa](https://github.com/07pepa)
+- PR <https://github.com/BeanieODM/beanie/pull/1044>
+### Add missing type hint to `find_many_in_all` method
+- Author - [vasuman](https://github.com/vasuman)
+- PR <https://github.com/BeanieODM/beanie/pull/1068>
+### Add documentdb compatibility to fetch_links
+- Author - [whitfin](https://github.com/whitfin)
+- PR <https://github.com/BeanieODM/beanie/pull/1042>
+### Fix issues caused by #1044
+- Author - [07pepa](https://github.com/07pepa)
+- PR <https://github.com/BeanieODM/beanie/pull/1053>
+### Feat(skip_index): possibility added to skip index actions
+- Author - [jorma16](https://github.com/jorma16)
+- PR <https://github.com/BeanieODM/beanie/pull/942>
+### Fix pydanticobjectid fields being parsed into str
+- Author - [07pepa](https://github.com/07pepa)
+- PR <https://github.com/BeanieODM/beanie/pull/1060>
+### Modify tests to not raise deprecation warnings
+- Author - [07pepa](https://github.com/07pepa)
+- PR <https://github.com/BeanieODM/beanie/pull/1047>
+### Add python 3.13 and jit into testing
+- Author - [07pepa](https://github.com/07pepa)
+- PR <https://github.com/BeanieODM/beanie/pull/1051>
+### Handle limit and session in .count() method
+- Author - [CAPITAINMARVEL](https://github.com/CAPITAINMARVEL)
+- PR <https://github.com/BeanieODM/beanie/pull/1040>
+
+[1.28.0]: https://pypi.org/project/beanie/1.28.0
+
+## [1.27.0] - 2024-10-06
+### Add tests on all major mongo version
+- Author - [07pepa](https://github.com/07pepa)
+- PR <https://github.com/BeanieODM/beanie/pull/1034>
+### Fix return type from document update
+- Author - [CAPITAINMARVEL](https://github.com/CAPITAINMARVEL)
+- PR <https://github.com/BeanieODM/beanie/pull/1030>
+### Fix expression type hint not allowing some type https://github.com/beanieodm/beanie/issues/1020
+- Author - [CAPITAINMARVEL](https://github.com/CAPITAINMARVEL)
+- PR <https://github.com/BeanieODM/beanie/pull/1023>
+### Fix type hint using pymongo client session instead of motor client session
+- Author - [CAPITAINMARVEL](https://github.com/CAPITAINMARVEL)
+- PR <https://github.com/BeanieODM/beanie/pull/1022>
+### Fix logical operator typing #1000
+- Author - [janas-adam](https://github.com/janas-adam)
+- PR <https://github.com/BeanieODM/beanie/pull/1021>
+### Use session in document insert
+- Author - [andraghetti](https://github.com/andraghetti)
+- PR <https://github.com/BeanieODM/beanie/pull/1018>
+### Use sequence instead of list in init_beanie
+- Author - [07pepa](https://github.com/07pepa)
+- PR <https://github.com/BeanieODM/beanie/pull/1015>
+### Replace deprecated datetime.utcnow with datetime.now
+- Author - [adeelsohailahmed](https://github.com/adeelsohailahmed)
+- PR <https://github.com/BeanieODM/beanie/pull/1014>
+### Fix uniondoc type hint missing in init_beanie and on findinterface
+- Author - [CAPITAINMARVEL](https://github.com/CAPITAINMARVEL)
+- PR <https://github.com/BeanieODM/beanie/pull/1007>
+### Add test to ensure dict with enum keys are encoded properly
+- Author - [adeelsohailahmed](https://github.com/adeelsohailahmed)
+- PR <https://github.com/BeanieODM/beanie/pull/1001>
+### Project publishing instruction + changelog generation script
+- Author - [roman-right](https://github.com/roman-right)
+- PR <https://github.com/BeanieODM/beanie/pull/998>
+### Revert project publishing gh action
+- Author - [roman-right](https://github.com/roman-right)
+- PR <https://github.com/BeanieODM/beanie/pull/996>
+### Extend motor option to beanie
+- Author - [Dudesons](https://github.com/Dudesons)
+- PR <https://github.com/BeanieODM/beanie/pull/995>
+### Fix regex storing
+- Author - [07pepa](https://github.com/07pepa)
+- PR <https://github.com/BeanieODM/beanie/pull/989>
+### Remove links to ko-fi from the project
+- Author - [roman-right](https://github.com/roman-right)
+- PR <https://github.com/BeanieODM/beanie/pull/986>
+### Fix typo in source code comment in inheritance.md
+- Author - [fnogatz](https://github.com/fnogatz)
+- PR <https://github.com/BeanieODM/beanie/pull/984>
+### Fix gh action to grant permissions and use tags
+- Author - [roman-right](https://github.com/roman-right)
+- PR <https://github.com/BeanieODM/beanie/pull/972>
+### Fix: example of find by id and link to finding-documents
+- Author - [fredowashere](https://github.com/fredowashere)
+- PR <https://github.com/BeanieODM/beanie/pull/970>
+### Fix incorrect type serialization when dumping to python
+- Author - [07pepa](https://github.com/07pepa)
+- PR <https://github.com/BeanieODM/beanie/pull/968>
+### Use ruff format instead of black
+- Author - [roman-right](https://github.com/roman-right)
+- PR <https://github.com/BeanieODM/beanie/pull/962>
+### Gh action: set new version and publish on push
+- Author - [roman-right](https://github.com/roman-right)
+- PR <https://github.com/BeanieODM/beanie/pull/961>
+### Feature / fix: allow settings to be inherited and extended (fixes #644)
+- Author - [dotKokott](https://github.com/dotKokott)
+- PR <https://github.com/BeanieODM/beanie/pull/960>
+### Fix: issue #951
+- Author - [IterableTrucks](https://github.com/IterableTrucks)
+- PR <https://github.com/BeanieODM/beanie/pull/952>
+### Allow unordered parameter on bulkwriter
+- Author - [thiagosalvatore](https://github.com/thiagosalvatore)
+- PR <https://github.com/BeanieODM/beanie/pull/948>
+### Fix: set default value in findinterface._inheritance_inited to avoid …
+- Author - [Robert-Nogueira](https://github.com/Robert-Nogueira)
+- PR <https://github.com/BeanieODM/beanie/pull/935>
+### Fix example in multi-model.md
+- Author - [gianpaj](https://github.com/gianpaj)
+- PR <https://github.com/BeanieODM/beanie/pull/932>
+### Add missing type signature to `basefindcomparisonoperator` constructor
+- Author - [aaronted009](https://github.com/aaronted009)
+- PR <https://github.com/BeanieODM/beanie/pull/925>
+### Removed calls to function causing deprecation warning where possible
+- Author - [07pepa](https://github.com/07pepa)
+- PR <https://github.com/BeanieODM/beanie/pull/917>
+### Update migrations.md
+- Author - [marwan-alloreview](https://github.com/marwan-alloreview)
+- PR <https://github.com/BeanieODM/beanie/pull/915>
+
+[1.27.0]: https://pypi.org/project/beanie/1.27.0
+
 ## [1.26.0] - 2024-05-01
         
 ### Feature: soft delete

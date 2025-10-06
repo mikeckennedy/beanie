@@ -9,8 +9,8 @@ from typing import (
     TypeVar,
 )
 
-from motor.core import AgnosticCommandCursor
 from pydantic import BaseModel
+from pymongo.asynchronous.command_cursor import AsyncCommandCursor
 
 from beanie.odm.cache import LRUCache
 from beanie.odm.interfaces.clone import CloneInterface
@@ -41,7 +41,7 @@ class AggregationQuery(
         find_query: Mapping[str, Any],
         projection_model: Optional[Type[BaseModel]] = None,
         ignore_cache: bool = False,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ):
         self.aggregation_pipeline: List[Mapping[str, Any]] = (
             aggregation_pipeline
@@ -95,10 +95,9 @@ class AggregationQuery(
                 projection_pipeline = [{"$project": projection}]
         return match_pipeline + self.aggregation_pipeline + projection_pipeline
 
-    @property
-    def motor_cursor(self) -> AgnosticCommandCursor:
+    async def get_cursor(self) -> AsyncCommandCursor:
         aggregation_pipeline = self.get_aggregation_pipeline()
-        return self.document_model.get_motor_collection().aggregate(
+        return await self.document_model.get_pymongo_collection().aggregate(
             aggregation_pipeline, session=self.session, **self.pymongo_kwargs
         )
 

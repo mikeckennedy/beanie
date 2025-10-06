@@ -8,6 +8,7 @@ from beanie.odm.fields import PydanticObjectId
 from beanie.odm.utils.pydantic import IS_PYDANTIC_V2
 from tests.odm.models import (
     DocumentTestModel,
+    DocumentTestModelWithModelConfigExtraAllow,
     DocumentWithKeepNullsFalse,
     DocumentWithList,
     ModelWithOptionalField,
@@ -127,6 +128,14 @@ async def test_update_one(document):
     assert new_document.test_list[0].test_str == "foo_foo"
 
 
+async def test_update_one_set_extra_field():
+    doc = DocumentTestModelWithModelConfigExtraAllow()
+    await doc.insert()
+
+    await doc.update({"$set": {"my_extra_field": 12345}})
+    assert doc.my_extra_field == 12345
+
+
 async def test_update_many(documents):
     await documents(10, "foo")
     await documents(7, "bar")
@@ -178,7 +187,7 @@ async def test_save_keep_nulls_false():
     assert from_db.m.s is None
 
     raw_data = (
-        await DocumentWithKeepNullsFalse.get_motor_collection().find_one(
+        await DocumentWithKeepNullsFalse.get_pymongo_collection().find_one(
             {"_id": doc.id}
         )
     )
@@ -201,7 +210,7 @@ async def test_save_changes_keep_nulls_false():
     assert from_db.m.s is None
 
     raw_data = (
-        await DocumentWithKeepNullsFalse.get_motor_collection().find_one(
+        await DocumentWithKeepNullsFalse.get_pymongo_collection().find_one(
             {"_id": doc.id}
         )
     )

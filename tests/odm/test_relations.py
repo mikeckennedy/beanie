@@ -169,10 +169,12 @@ class TestInsert:
 
         house = parse_model(House, house_not_inserted)
         await house.insert(link_rule=WriteRules.WRITE)
+
         if IS_PYDANTIC_V2:
-            house.model_dump_json()
+            json_str = house.model_dump_json()
         else:
-            house.json()
+            json_str = house.json()
+        assert json_str is not None
 
     async def test_multi_insert_links(self):
         house = House(name="random", windows=[], door=Door())
@@ -195,6 +197,7 @@ class TestInsert:
         assert new_window_2.id is not None
 
     async def test_fetch_after_insert(self, house_not_inserted):
+        # TODO: what is the point of this test if nothing was inserted to DB?
         await house_not_inserted.fetch_all_links()
 
 
@@ -427,6 +430,53 @@ class TestFind:
         )
         assert doc.back_link.link.id == doc.id
         assert isinstance(doc.back_link.link.back_link, BackLink)
+
+    async def test_delete_with_fetch_links(self):
+        # Setup linked documents
+        lock = await Lock(k=123).insert()
+        window = await Window(x=1, y=2, lock=lock).insert()
+        door = await Door(t=10, window=window, locks=[lock]).insert()
+
+        # Inserted the houses to delete
+        await House(
+            windows=[window], door=door, height=10, name="test"
+        ).insert()
+        await House(
+            windows=[window], door=door, height=12, name="test2"
+        ).insert()
+
+        # Perform deletion
+        deleted = await House.find(House.height > 5, fetch_links=True).delete()
+
+        assert deleted.deleted_count == 2  # we inserted 2
+        remaining = await House.find_all().to_list()
+        assert len(remaining) == 0
+
+    async def test_chained_find_with_fetch_links_and_update(self):
+        lock = await Lock(k=123).insert()
+        window = await Window(x=1, y=2, lock=lock).insert()
+        door = await Door(t=10, window=window, locks=[lock]).insert()
+
+        await House(
+            windows=[window], door=door, height=10, name="test"
+        ).insert()
+        await House(
+            windows=[window], door=door, height=15, name="test2"
+        ).insert()
+
+        # Update using chained find with fetch_links
+        result = (
+            await House.find(House.height > 5, fetch_links=True)
+            .find(House.height < 20)
+            .update({"$set": {"name": "updated"}})
+        )
+
+        # Assert update count
+        assert result.modified_count == 2
+
+        # Confirm updated documents
+        updated_docs = await House.find(House.name == "updated").to_list()
+        assert len(updated_docs) == 2
 
 
 class TestReplace:

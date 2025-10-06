@@ -18,7 +18,7 @@ from typing import (
 from pydantic import (
     BaseModel,
 )
-from pymongo.client_session import ClientSession
+from pymongo.asynchronous.client_session import AsyncClientSession
 
 from beanie.odm.enums import SortDirection
 from beanie.odm.interfaces.detector import ModelType
@@ -27,10 +27,11 @@ from beanie.odm.settings.base import ItemSettings
 
 if TYPE_CHECKING:
     from beanie.odm.documents import Document
+    from beanie.odm.union_doc import UnionDoc
     from beanie.odm.views import View
 
 DocumentProjectionType = TypeVar("DocumentProjectionType", bound=BaseModel)
-FindType = TypeVar("FindType", bound=Union["Document", "View"])
+FindType = TypeVar("FindType", bound=Union["Document", "UnionDoc", "View"])
 
 
 class FindInterface:
@@ -57,53 +58,53 @@ class FindInterface:
     @classmethod
     def find_one(  # type: ignore
         cls: Type[FindType],
-        *args: Union[Mapping[str, Any], bool],
+        *args: Union[Mapping[Any, Any], bool],
         projection_model: None = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         fetch_links: bool = False,
         with_children: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> FindOne[FindType]: ...
 
     @overload
     @classmethod
     def find_one(  # type: ignore
         cls: Type[FindType],
-        *args: Union[Mapping[str, Any], bool],
+        *args: Union[Mapping[Any, Any], bool],
         projection_model: Type["DocumentProjectionType"],
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         fetch_links: bool = False,
         with_children: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> FindOne["DocumentProjectionType"]: ...
 
     @classmethod
     def find_one(  # type: ignore
         cls: Type[FindType],
-        *args: Union[Mapping[str, Any], bool],
+        *args: Union[Mapping[Any, Any], bool],
         projection_model: Optional[Type["DocumentProjectionType"]] = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         fetch_links: bool = False,
         with_children: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> Union[FindOne[FindType], FindOne["DocumentProjectionType"]]:
         """
         Find one document by criteria.
         Returns [FindOne](query.md#findone) query object.
         When awaited this will either return a document or None if no document exists for the search criteria.
 
-        :param args: *Mapping[str, Any] - search criteria
+        :param args: *Mapping[Any, Any] - search criteria
         :param projection_model: Optional[Type[BaseModel]] - projection model
-        :param session: Optional[ClientSession] - pymongo session instance
+        :param session: Optional[AsyncClientSession] - pymongo session.
         :param ignore_cache: bool
         :param **pymongo_kwargs: pymongo native parameters for find operation (if Document class contains links, this parameter must fit the respective parameter of the aggregate MongoDB function)
         :return: [FindOne](query.md#findone) - find query instance
@@ -124,67 +125,67 @@ class FindInterface:
     @classmethod
     def find_many(  # type: ignore
         cls: Type[FindType],
-        *args: Union[Mapping[str, Any], bool],
+        *args: Union[Mapping[Any, Any], bool],
         projection_model: None = None,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
         sort: Union[None, str, List[Tuple[str, SortDirection]]] = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         fetch_links: bool = False,
         with_children: bool = False,
         lazy_parse: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> FindMany[FindType]: ...
 
     @overload
     @classmethod
     def find_many(  # type: ignore
         cls: Type[FindType],
-        *args: Union[Mapping[str, Any], bool],
+        *args: Union[Mapping[Any, Any], bool],
         projection_model: Optional[Type["DocumentProjectionType"]] = None,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
         sort: Union[None, str, List[Tuple[str, SortDirection]]] = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         fetch_links: bool = False,
         with_children: bool = False,
         lazy_parse: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> FindMany["DocumentProjectionType"]: ...
 
     @classmethod
     def find_many(  # type: ignore
         cls: Type[FindType],
-        *args: Union[Mapping[str, Any], bool],
+        *args: Union[Mapping[Any, Any], bool],
         projection_model: Optional[Type["DocumentProjectionType"]] = None,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
         sort: Union[None, str, List[Tuple[str, SortDirection]]] = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         fetch_links: bool = False,
         with_children: bool = False,
         lazy_parse: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> Union[FindMany[FindType], FindMany["DocumentProjectionType"]]:
         """
         Find many documents by criteria.
         Returns [FindMany](query.md#findmany) query object
 
-        :param args: *Mapping[str, Any] - search criteria
+        :param args: *Mapping[Any, Any] - search criteria
         :param skip: Optional[int] - The number of documents to omit.
         :param limit: Optional[int] - The maximum number of results to return.
         :param sort: Union[None, str, List[Tuple[str, SortDirection]]] - A key or a list of (key, direction) pairs specifying the sort order for this query.
         :param projection_model: Optional[Type[BaseModel]] - projection model
-        :param session: Optional[ClientSession] - pymongo session
+        :param session: Optional[AsyncClientSession] - pymongo session.
         :param ignore_cache: bool
         :param lazy_parse: bool
         :param **pymongo_kwargs: pymongo native parameters for find operation (if Document class contains links, this parameter must fit the respective parameter of the aggregate MongoDB function)
@@ -210,56 +211,56 @@ class FindInterface:
     @classmethod
     def find(  # type: ignore
         cls: Type[FindType],
-        *args: Union[Mapping[str, Any], bool],
+        *args: Union[Mapping[Any, Any], bool],
         projection_model: None = None,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
         sort: Union[None, str, List[Tuple[str, SortDirection]]] = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         fetch_links: bool = False,
         with_children: bool = False,
         lazy_parse: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> FindMany[FindType]: ...
 
     @overload
     @classmethod
     def find(  # type: ignore
         cls: Type[FindType],
-        *args: Union[Mapping[str, Any], bool],
+        *args: Union[Mapping[Any, Any], bool],
         projection_model: Type["DocumentProjectionType"],
         skip: Optional[int] = None,
         limit: Optional[int] = None,
         sort: Union[None, str, List[Tuple[str, SortDirection]]] = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         fetch_links: bool = False,
         with_children: bool = False,
         lazy_parse: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> FindMany["DocumentProjectionType"]: ...
 
     @classmethod
     def find(  # type: ignore
         cls: Type[FindType],
-        *args: Union[Mapping[str, Any], bool],
+        *args: Union[Mapping[Any, Any], bool],
         projection_model: Optional[Type["DocumentProjectionType"]] = None,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
         sort: Union[None, str, List[Tuple[str, SortDirection]]] = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         fetch_links: bool = False,
         with_children: bool = False,
         lazy_parse: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> Union[FindMany[FindType], FindMany["DocumentProjectionType"]]:
         """
         The same as find_many
@@ -288,13 +289,13 @@ class FindInterface:
         limit: Optional[int] = None,
         sort: Union[None, str, List[Tuple[str, SortDirection]]] = None,
         projection_model: None = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         with_children: bool = False,
         lazy_parse: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> FindMany[FindType]: ...
 
     @overload
@@ -305,13 +306,13 @@ class FindInterface:
         limit: Optional[int] = None,
         sort: Union[None, str, List[Tuple[str, SortDirection]]] = None,
         projection_model: Optional[Type["DocumentProjectionType"]] = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         with_children: bool = False,
         lazy_parse: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> FindMany["DocumentProjectionType"]: ...
 
     @classmethod
@@ -321,13 +322,13 @@ class FindInterface:
         limit: Optional[int] = None,
         sort: Union[None, str, List[Tuple[str, SortDirection]]] = None,
         projection_model: Optional[Type["DocumentProjectionType"]] = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         with_children: bool = False,
         lazy_parse: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> Union[FindMany[FindType], FindMany["DocumentProjectionType"]]:
         """
         Get all the documents
@@ -336,7 +337,7 @@ class FindInterface:
         :param limit: Optional[int] - The maximum number of results to return.
         :param sort: Union[None, str, List[Tuple[str, SortDirection]]] - A key or a list of (key, direction) pairs specifying the sort order for this query.
         :param projection_model: Optional[Type[BaseModel]] - projection model
-        :param session: Optional[ClientSession] - pymongo session
+        :param session: Optional[AsyncClientSession] - pymongo session.
         :param **pymongo_kwargs: pymongo native parameters for find operation (if Document class contains links, this parameter must fit the respective parameter of the aggregate MongoDB function)
         :return: [FindMany](query.md#findmany) - query instance
         """
@@ -363,13 +364,13 @@ class FindInterface:
         skip: Optional[int] = None,
         limit: Optional[int] = None,
         sort: Union[None, str, List[Tuple[str, SortDirection]]] = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         with_children: bool = False,
         lazy_parse: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> FindMany[FindType]: ...
 
     @overload
@@ -380,13 +381,13 @@ class FindInterface:
         skip: Optional[int] = None,
         limit: Optional[int] = None,
         sort: Union[None, str, List[Tuple[str, SortDirection]]] = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         with_children: bool = False,
         lazy_parse: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> FindMany["DocumentProjectionType"]: ...
 
     @classmethod
@@ -396,13 +397,13 @@ class FindInterface:
         skip: Optional[int] = None,
         limit: Optional[int] = None,
         sort: Union[None, str, List[Tuple[str, SortDirection]]] = None,
-        session: Optional[ClientSession] = None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
         with_children: bool = False,
         lazy_parse: bool = False,
         nesting_depth: Optional[int] = None,
         nesting_depths_per_field: Optional[Dict[str, int]] = None,
-        **pymongo_kwargs,
+        **pymongo_kwargs: Any,
     ) -> Union[FindMany[FindType], FindMany["DocumentProjectionType"]]:
         """
         the same as find_all

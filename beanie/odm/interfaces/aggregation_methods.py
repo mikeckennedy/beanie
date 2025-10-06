@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Any, Dict, List, Optional, Union, cast
 
-from pymongo.client_session import ClientSession
+from pymongo.asynchronous.client_session import AsyncClientSession
 
 from beanie.odm.fields import ExpressionField
 
@@ -16,14 +16,14 @@ class AggregateMethods:
         self,
         aggregation_pipeline,
         projection_model=None,
-        session=None,
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
     ): ...
 
     async def sum(
         self,
-        field: Union[str, ExpressionField],
-        session: Optional[ClientSession] = None,
+        field: Union[ExpressionField, float, int, str],
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
     ) -> Optional[float]:
         """
@@ -41,8 +41,8 @@ class AggregateMethods:
 
         ```
 
-        :param field: Union[str, ExpressionField]
-        :param session: Optional[ClientSession] - pymongo session
+        :param field: Union[ExpressionField, float, int, str]
+        :param session: Optional[AsyncClientSession] - pymongo session
         :param ignore_cache: bool
         :return: float - sum. None if there are no items.
         """
@@ -66,8 +66,8 @@ class AggregateMethods:
 
     async def avg(
         self,
-        field,
-        session: Optional[ClientSession] = None,
+        field: Union[ExpressionField, float, int, str],
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
     ) -> Optional[float]:
         """
@@ -84,8 +84,8 @@ class AggregateMethods:
         avg_count = await Document.find(Sample.price <= 100).avg(Sample.count)
         ```
 
-        :param field: Union[str, ExpressionField]
-        :param session: Optional[ClientSession] - pymongo session
+        :param field: Union[ExpressionField, float, int, str]
+        :param session: Optional[AsyncClientSession] - pymongo session
         :param ignore_cache: bool
         :return: Optional[float] - avg. None if there are no items.
         """
@@ -108,10 +108,10 @@ class AggregateMethods:
 
     async def max(
         self,
-        field: Union[str, ExpressionField],
-        session: Optional[ClientSession] = None,
+        field: Union[ExpressionField, str, Any],
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
-    ) -> Optional[float]:
+    ) -> Optional[Any]:
         """
         Max of the values of the given field
 
@@ -126,9 +126,9 @@ class AggregateMethods:
         max_count = await Document.find(Sample.price <= 100).max(Sample.count)
         ```
 
-        :param field: Union[str, ExpressionField]
-        :param session: Optional[ClientSession] - pymongo session
-        :return: float - max. None if there are no items.
+        :param field: Union[ExpressionField, str, Any]
+        :param session: Optional[AsyncClientSession] - pymongo session
+        :return: Any - max value. None if there are no items.
         """
         pipeline = [
             {"$group": {"_id": None, "max": {"$max": f"${field}"}}},
@@ -149,10 +149,10 @@ class AggregateMethods:
 
     async def min(
         self,
-        field: Union[str, ExpressionField],
-        session: Optional[ClientSession] = None,
+        field: Union[ExpressionField, str, Any],
+        session: Optional[AsyncClientSession] = None,
         ignore_cache: bool = False,
-    ) -> Optional[float]:
+    ) -> Optional[Any]:
         """
         Min of the values of the given field
 
@@ -167,9 +167,9 @@ class AggregateMethods:
         min_count = await Document.find(Sample.price <= 100).min(Sample.count)
         ```
 
-        :param field: Union[str, ExpressionField]
-        :param session: Optional[ClientSession] - pymongo session
-        :return: float - min. None if there are no items.
+        :param field: Union[ExpressionField, str, Any]
+        :param session: Optional[AsyncClientSession] - pymongo session
+        :return: Any - min value. None if there are no items.
         """
         pipeline = [
             {"$group": {"_id": None, "min": {"$min": f"${field}"}}},

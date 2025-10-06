@@ -4,6 +4,9 @@ import pydantic
 from pydantic import BaseModel
 
 IS_PYDANTIC_V2 = int(pydantic.VERSION.split(".")[0]) >= 2
+IS_PYDANTIC_V2_10 = (
+    IS_PYDANTIC_V2 and int(pydantic.VERSION.split(".")[1]) >= 10
+)
 
 if IS_PYDANTIC_V2:
     from pydantic import TypeAdapter
@@ -55,7 +58,7 @@ def get_config_value(model, parameter: str):
         return getattr(model.Config, parameter, None)
 
 
-def get_model_dump(model, *args, **kwargs):
+def get_model_dump(model, *args: Any, **kwargs: Any):
     if IS_PYDANTIC_V2:
         return model.model_dump(*args, **kwargs)
     else:

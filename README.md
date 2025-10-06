@@ -2,8 +2,9 @@
 
 [![shields badge](https://shields.io/badge/-docs-blue)](https://beanie-odm.dev)
 [![pypi](https://img.shields.io/pypi/v/beanie.svg)](https://pypi.python.org/pypi/beanie)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/BeanieODM/beanie/main.svg)](https://results.pre-commit.ci/latest/github/BeanieODM/beanie/main)
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G0PS833)
+
 
 ## 📢 Important Update 📢
 
@@ -47,13 +48,16 @@ pip install beanie
 ```shell
 poetry add beanie
 ```
+
+For more installation options (eg: `aws`, `gcp`, `srv` ...) you can look in the [getting started](./docs/getting-started.md#optional-dependencies)
+
 ## Example
 
 ```python
 import asyncio
 from typing import Optional
 
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 from pydantic import BaseModel
 
 from beanie import Document, Indexed, init_beanie
@@ -73,8 +77,8 @@ class Product(Document):
 
 # This is an asynchronous example, so we will access it from an async function
 async def example():
-    # Beanie uses Motor async client under the hood 
-    client = AsyncIOMotorClient("mongodb://user:pass@host:27017")
+    # Beanie uses PyMongo async client under the hood
+    client = AsyncMongoClient("mongodb://user:pass@host:27017")
 
     # Initialize beanie with the Product document class
     await init_beanie(database=client.db_name, document_models=[Product])

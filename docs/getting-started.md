@@ -16,21 +16,76 @@ pip install beanie
 poetry add beanie
 ```
 
+### Optional dependencies
+
+Beanie supports some optional dependencies from PyMongo (`pip` or `poetry` can be used).
+
+GSSAPI authentication requires `gssapi` extra dependency:
+
+```bash
+pip install "beanie[gssapi]"
+```
+
+MONGODB-AWS authentication requires `aws` extra dependency:
+
+```bash
+pip install "beanie[aws]"
+```
+
+Support for mongodb+srv:// URIs requires `srv` extra dependency:
+
+```bash
+pip install "beanie[srv]"
+```
+
+OCSP requires `ocsp` extra dependency:
+
+```bash
+pip install "beanie[ocsp]"
+```
+
+Wire protocol compression with snappy requires `snappy` extra
+dependency:
+
+```bash
+pip install "beanie[snappy]"
+```
+
+Wire protocol compression with zstandard requires `zstd` extra
+dependency:
+
+```bash
+pip install "beanie[zstd]"
+```
+
+Client-Side Field Level Encryption requires `encryption` extra
+dependency:
+
+```bash
+pip install "beanie[encryption]"
+```
+
+You can install all dependencies automatically with the following
+command:
+
+```bash
+pip install "beanie[gssapi,aws,ocsp,snappy,srv,zstd,encryption]"
+```
+
 ## Initialization
 
 Getting Beanie setup in your code is really easy:
 
 1.  Write your database model as a Pydantic class but use `beanie.Document` instead of `pydantic.BaseModel`.
-2.  Initialize Motor, as Beanie uses this as an async database engine under the hood.
-3.  Call `beanie.init_beanie` with the Motor client and list of Beanie models
+2.  Initialize Async PyMongo, as Beanie uses this as an async database engine under the hood.
+3.  Call `beanie.init_beanie` with the PyMongo client and list of Beanie models
 
 The code below should get you started and shows some of the field types that you can use with beanie.
 
 ```python
 from typing import Optional
 
-import motor.motor_asyncio
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 from pydantic import BaseModel
 
 from beanie import Document, Indexed, init_beanie
@@ -51,8 +106,8 @@ class Product(Document):
 
 # Call this from within your event loop to get beanie setup.
 async def init():
-    # Create Motor client
-    client = AsyncIOMotorClient("mongodb://user:pass@host:27017")
+    # Create Async PyMongo client
+    client = AsyncMongoClient("mongodb://user:pass@host:27017")
 
     # Init beanie with the Product document class
     await init_beanie(database=client.db_name, document_models=[Product])

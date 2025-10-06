@@ -4,25 +4,68 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "beanie"
-version = "1.27.0"
+version = "2.0.0"
 description = "Asynchronous Python ODM for MongoDB"
 readme = "README.md"
-requires-python = ">=3.7,<4.0"
-keywords = [ "mongodb", "odm", "orm", "pydantic", "mongo", "async", "python",]
-classifiers = [ "License :: OSI Approved :: Apache Software License", "Development Status :: 5 - Production/Stable", "Intended Audience :: Developers", "Operating System :: OS Independent", "Topic :: Database", "Topic :: Software Development :: Libraries :: Python Modules", "Typing :: Typed",]
-dependencies = [ "pydantic>=1.10,<3.0", "motor>=2.5.0,<4.0.0", "click>=7", "toml", "lazy-model==0.2.0", "typing-extensions>=4.7; python_version < '3.11'",]
-[[project.authors]]
-name = "Roman Right"
-email = "roman-right@protonmail.com"
-
-[project.license]
-file = "LICENSE"
+requires-python = ">=3.9,<4.0"
+license = { file="LICENSE" }
+authors = [
+    {name = "Roman Right", email = "roman-right@protonmail.com"}
+]
+keywords = ["mongodb", "odm", "orm", "pydantic", "mongo", "async", "python"]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pydantic>=1.10.18,<3.0",
+    "click>=7",
+    "lazy-model>=0.4.0,<1.0.0",
+    "pymongo>=4.11.0,!=4.15.0,<5.0.0",
+    "typing-extensions>=4.7",
+]
 
 [project.optional-dependencies]
-test = [ "pre-commit>=2.3.0", "pytest>=6.0.0", "pytest-asyncio>=0.21.0", "pytest-cov>=2.8.1", "dnspython>=2.1.0", "flake8>=3", "pyright>=0", "asgi-lifespan>=1.0.1", "httpx>=0.23.0", "fastapi>=0.100", "pydantic-settings>=2", "pydantic-extra-types>=2", "pydantic[email]",]
-doc = [ "Pygments>=2.8.0", "Markdown>=3.3", "pydoc-markdown>=4.8", "mkdocs>=1.4", "mkdocs-material>=9.0", "jinja2>=3.0.3",]
-queue = [ "beanie-batteries-queue>=0.2",]
-ci = [ "toml", "requests", "types-requests",]
+test = [
+    "pre-commit>=3.5.0",
+    "pytest>=8.3.3",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=5.0.0",
+    "dnspython>=2.1.0",
+    "pyright>=0",
+    "asgi-lifespan>=1.0.1",
+    "httpx>=0.23.0",
+    "fastapi>=0.100",
+    "pydantic-settings>=2",
+    "pydantic-extra-types>=2",
+    "pydantic[email]",
+]
+doc = [
+    "Pygments>=2.8.0",
+    "Markdown>=3.3",
+    "pydoc-markdown>=4.8",
+    "mkdocs>=1.4",
+    "mkdocs-material>=9.0",
+    "jinja2>=3.0.3"
+]
+queue = ["beanie-batteries-queue>=0.2"]
+ci = [
+    "tomli>=2.2.1,<3.0.0; python_version < '3.11'",
+    "tomli-w>=1.0.0,<2.0.0",
+    "requests",
+    "types-requests",
+]
+aws = ["pymongo[aws]>=4.11.0,!=4.15.0,<5.0.0"]
+encryption = ["pymongo[encryption]>=4.11.0,!=4.15.0,<5.0.0"]
+gssapi = ["pymongo[gssapi]>=4.11.0,!=4.15.0,<5.0.0"]
+ocsp = ["pymongo[ocsp]>=4.11.0,!=4.15.0,<5.0.0"]
+snappy = ["pymongo[snappy]>=4.11.0,!=4.15.0,<5.0.0"]
+zstd = ["pymongo[zstd]>=4.11.0,!=4.15.0,<5.0.0"]
 
 [project.urls]
 homepage = "https://beanie-odm.dev"
@@ -46,17 +89,38 @@ fix = true
 target-version = "py312"
 include = [ "**/*.py", ".github/**/*.py",]
 
+[tool.coverage.run]
+branch = true
+source = ["beanie"]
+
+[tool.coverage.report]
+ignore_errors = true
+show_missing = true
+fail_under = 80
+exclude_lines = [
+    'pragma: no cover',
+    'if TYPE_CHECKING:',
+    'if typing.TYPE_CHECKING:',
+    'if __name__ == .__main__.:'
+]
+
 [tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "--cov-report term-missing --cov=beanie --cov-branch --cov-fail-under=80"
-testpaths = [ "tests",]
-filterwarnings = [ "error", "ignore::DeprecationWarning", "ignore::UserWarning",]
+minversion = "8.0"
+addopts = "--cov"
+testpaths = [
+    "tests",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.beanie.migrations]
 path = "beanie/example_migration"
 database_name = "beanie_db"
-
 [tool.ruff.lint]
 ignore = [ "E501",]
 extend-select = [ "I001",]

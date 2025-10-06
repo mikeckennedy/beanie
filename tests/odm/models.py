@@ -19,11 +19,13 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    Type,
     Union,
 )
 from uuid import UUID, uuid4
 
 import pymongo
+from bson import Regex
 from pydantic import (
     UUID4,
     BaseModel,
@@ -35,7 +37,6 @@ from pydantic import (
     SecretBytes,
     SecretStr,
 )
-from pydantic.fields import FieldInfo
 from pydantic_core import core_schema
 from pymongo import IndexModel
 from typing_extensions import Annotated
@@ -52,6 +53,7 @@ from beanie import (
     ValidateOnSave,
 )
 from beanie.odm.actions import Delete, after_event, before_event
+from beanie.odm.custom_types import re
 from beanie.odm.custom_types.bson.binary import BsonBinary
 from beanie.odm.fields import BackLink, Link, PydanticObjectId
 from beanie.odm.settings.timeseries import TimeSeriesConfig
@@ -83,36 +85,33 @@ class Color:
         return self.value
 
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value):
+    def _validate(cls, value: Any) -> "Color":
         if isinstance(value, Color):
             return value
         if isinstance(value, dict):
             return Color(value["value"])
         return Color(value)
 
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _source_type: Any,
-        _handler: Callable[[Any], core_schema.CoreSchema],  # type: ignore
-    ) -> core_schema.CoreSchema:  # type: ignore
-        def validate(value, _: FieldInfo) -> Color:
-            if isinstance(value, Color):
-                return value
-            if isinstance(value, dict):
-                return Color(value["value"])
-            return Color(value)
+    if IS_PYDANTIC_V2:
 
-        python_schema = core_schema.general_plain_validator_function(validate)
+        @classmethod
+        def __get_pydantic_core_schema__(
+            cls,
+            _source_type: Type[Any],
+            _handler: Callable[[Any], core_schema.CoreSchema],
+        ) -> core_schema.CoreSchema:
+            return core_schema.json_or_python_schema(
+                json_schema=core_schema.str_schema(),
+                python_schema=core_schema.no_info_plain_validator_function(
+                    cls._validate
+                ),
+            )
 
-        return core_schema.json_or_python_schema(
-            json_schema=core_schema.str_schema(),
-            python_schema=python_schema,
-        )
+    else:
+
+        @classmethod
+        def __get_validators__(cls):
+            yield cls._validate
 
 
 class Extra(str, Enum):
@@ -166,7 +165,7 @@ class DocumentTestModel(Document):
     test_int: int
     test_doc: SubDocument
     test_str: str
-    test_list: List[SubDocument] = Field(exclude=True)
+    test_list: List[SubDocument]
 
     class Settings:
         use_cache = True
@@ -269,9 +268,11 @@ class DocumentTestModelFailInspection(Document):
 
 class DocumentWithDeprecatedHiddenField(Document):
     if IS_PYDANTIC_V2:
-        test_hidden: List[str] = Field(json_schema_extra={"hidden": True})
+        test_hidden: Optional[List[str]] = Field(
+            default=None, json_schema_extra={"hidden": True}
+        )
     else:
-        test_hidden: List[str] = Field(hidden=True)
+        test_hidden: Optional[List[str]] = Field(default=None, hidden=True)
 
 
 class DocumentWithCustomIdUUID(Document):
@@ -569,7 +570,7 @@ class House(Document):
     roof: Optional[Link[Roof]] = None
     yards: Optional[List[Link[Yard]]] = None
     height: Indexed(int) = 2
-    name: Indexed(str) = Field(exclude=True)
+    name: Indexed(str)
 
     if IS_PYDANTIC_V2:
         model_config = ConfigDict(
@@ -626,6 +627,17 @@ class DocumentMultiModelTwo(Document):
         union_doc = DocumentUnion
         name = "multi_two"
         class_id = "123"
+
+
+class DocumentTestModelWithModelConfigExtraAllow(Document):
+    if IS_PYDANTIC_V2:
+        model_config = ConfigDict(
+            extra="allow",
+        )
+    else:
+
+        class Config:
+            extra = Extra.allow
 
 
 class YardWithRevision(Document):
@@ -895,6 +907,11 @@ class DocumentWithKeepNullsFalse(Document):
         use_state_management = True
 
 
+class DocumentWithExcludedField(Document):
+    included_field: int
+    excluded_field: Optional[int] = Field(default=None, exclude=True)
+
+
 class ReleaseElemMatch(BaseModel):
     major_ver: int
     minor_ver: int
@@ -907,6 +924,11 @@ class PackageElemMatch(Document):
 
 class DocumentWithLink(Document):
     link: Link["DocumentWithBackLink"]
+    s: str = "TEST"
+
+
+class DocumentWithOptionalLink(Document):
+    link: Optional[Link["DocumentWithBackLink"]]
     s: str = "TEST"
 
 
@@ -989,7 +1011,9 @@ class DocumentWithListOfLinks(Document):
 
 
 class DocumentWithTimeStampToTestConsistency(Document):
-    ts: datetime.datetime = Field(default_factory=datetime.datetime.utcnow)
+    ts: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc)
+    )
 
 
 class DocumentWithIndexMerging1(Document):
@@ -1134,3 +1158,29 @@ class LongSelfLink(Document):
 
     class Settings:
         max_nesting_depth = 50
+
+
+class DictEnum(str, Enum):
+    RED = "Red"
+    BLUE = "Blue"
+
+
+class DocumentWithEnumKeysDict(Document):
+    color: Dict[DictEnum, str]
+
+
+class BsonRegexDoc(Document):
+    regex: Optional[Regex] = None
+
+    if IS_PYDANTIC_V2:
+        model_config = ConfigDict(
+            arbitrary_types_allowed=True,
+        )
+    else:
+
+        class Config:
+            arbitrary_types_allowed = True
+
+
+class NativeRegexDoc(Document):
+    regex: Optional[re.Pattern]

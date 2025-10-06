@@ -14,9 +14,11 @@ Depending on the business logic, parent `Document` can be like an "abstract" cla
 To set the root model you have to set `is_root = True` in the inner Settings class. All the inherited documents (on any level) will be stored in the same collection.
 
 ```py hl_lines="20 20"
-from typing import Optional, List
-from motor.motor_asyncio import AsyncIOMotorClient
+from typing import List, Optional
+
 from pydantic import BaseModel
+from pymongo import AsyncMongoClient
+
 from beanie import Document, Link, init_beanie
 
 
@@ -69,8 +71,8 @@ class Owner(Document):
 Inserts work the same way as usual
 
 ```python
-client = AsyncIOMotorClient()
-await init_beanie(client.test_db, document_models=[Vehicle, Bicycle, Bike, Car, Bus])
+client = AsyncMongoClient()
+await init_beanie(client.test_db, document_models=[Vehicle, Bicycle, Bike, Car, Bus, Owner])
 
 bike_1 = await Bike(color='black', fuel='gasoline').insert()
 
@@ -88,7 +90,7 @@ owner = await Owner(name='John', vehicles=[car_1, car_2, bus_1]).insert()
 With parameter `with_children = True` the find query results will contain all the children classes' objects.
 
 ```python
-# this query returns vehicles of all types that have white color, becuase `with_children` is True
+# this query returns vehicles of all types that have white color, because `with_children` is True
 white_vehicles = await Vehicle.find(Vehicle.color == 'white', with_children=True).to_list()
 # [
 #    Bicycle(..., color='white', frame=54, wheels=29),

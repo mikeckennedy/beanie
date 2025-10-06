@@ -1,5 +1,7 @@
-import asyncio
 import sys
+
+from pymongo.asynchronous.database import AsyncDatabase
+from typing_extensions import Sequence, get_args, get_origin
 
 from beanie.odm.utils.pydantic import (
     IS_PYDANTIC_V2,
@@ -8,11 +10,6 @@ from beanie.odm.utils.pydantic import (
     parse_model,
 )
 from beanie.odm.utils.typing import get_index_attributes
-
-if sys.version_info >= (3, 8):
-    from typing import get_args, get_origin
-else:
-    from typing_extensions import get_args, get_origin
 
 if sys.version_info >= (3, 10):
     from types import UnionType as TypesUnionType
@@ -29,10 +26,9 @@ from typing import (  # type: ignore
     _GenericAlias,
 )
 
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
-from pymongo import IndexModel
+from pymongo import AsyncMongoClient, IndexModel
 
 from beanie.exceptions import Deprecation, MongoDBVersionError
 from beanie.odm.actions import ActionRegistry
@@ -50,7 +46,7 @@ from beanie.odm.registry import DocsRegistry
 from beanie.odm.settings.document import DocumentSettings, IndexModelField
 from beanie.odm.settings.union_doc import UnionDocSettings
 from beanie.odm.settings.view import ViewSettings
-from beanie.odm.union_doc import UnionDoc
+from beanie.odm.union_doc import UnionDoc, UnionDocType
 from beanie.odm.views import View
 
 
@@ -62,32 +58,35 @@ class Output(BaseModel):
 class Initializer:
     def __init__(
         self,
-        database: AsyncIOMotorDatabase = None,
+        database: AsyncDatabase = None,
         connection_string: Optional[str] = None,
         document_models: Optional[
-            List[Union[Type["DocType"], Type["View"], str]]
+            Sequence[
+                Union[Type["DocType"], Type["UnionDocType"], Type["View"], str]
+            ]
         ] = None,
         allow_index_dropping: bool = False,
         recreate_views: bool = False,
-        multiprocessing_mode: bool = False,
+        skip_indexes: bool = False,
     ):
         """
         Beanie initializer
 
-        :param database: AsyncIOMotorDatabase - motor database instance
+        :param database: AsyncDatabase - pymongo database instance
         :param connection_string: str - MongoDB connection string
-        :param document_models: List[Union[Type[DocType], str]] - model classes
+        :param document_models: List[Union[Type[DocType], Type[UnionDocType], str]] - model classes
         or strings with dot separated paths
         :param allow_index_dropping: bool - if index dropping is allowed.
         Default False
         :param recreate_views: bool - if views should be recreated. Default False
-        :param multiprocessing_mode: bool - if multiprocessing mode is on
-        it will patch the motor client to use process's event loop.
+        it will patch the pymongo client to use process's event loop.
+        :param skip_indexes: bool - if you want to skip working with indexes. Default False
         :return: None
         """
 
         self.inited_classes: List[Type] = []
         self.allow_index_dropping = allow_index_dropping
+        self.skip_indexes = skip_indexes
         self.recreate_views = recreate_views
 
         self.models_with_updated_forward_refs: List[Type[BaseModel]] = []
@@ -102,14 +101,11 @@ class Initializer:
         if document_models is None:
             raise ValueError("document_models parameter must be set")
         if connection_string is not None:
-            database = AsyncIOMotorClient(
+            database = AsyncMongoClient(
                 connection_string
             ).get_default_database()
 
-        self.database: AsyncIOMotorDatabase = database
-
-        if multiprocessing_mode:
-            self.database.client.get_io_loop = asyncio.get_running_loop
+        self.database: AsyncDatabase = database
 
         sort_order = {
             ModelType.UnionDoc: 0,
@@ -117,7 +113,9 @@ class Initializer:
             ModelType.View: 2,
         }
 
-        self.document_models: List[Union[Type[DocType], Type[View]]] = [
+        self.document_models: List[
+            Union[Type[DocType], Type[UnionDocType], Type[View]]
+        ] = [
             self.get_model(model) if isinstance(model, str) else model
             for model in document_models
         ]
@@ -175,9 +173,15 @@ class Initializer:
         :return: None
         """
         settings_class = getattr(cls, "Settings", None)
-        settings_vars = (
-            {} if settings_class is None else dict(vars(settings_class))
-        )
+        settings_vars = {}
+        if settings_class is not None:
+            # get all attributes of the Settings subclass (including inherited ones)
+            # without magic dunder methods
+            settings_vars = {
+                attr: getattr(settings_class, attr)
+                for attr in dir(settings_class)
+                if not attr.startswith("__")
+            }
         if issubclass(cls, Document):
             cls._document_settings = parse_model(
                 DocumentSettings, settings_vars
@@ -412,7 +416,7 @@ class Initializer:
                     link_info.is_fetchable = False
                     cls._link_fields[k] = link_info
 
-        cls.check_hidden_fields()
+        cls._check_hidden_fields()
 
     @staticmethod
     def init_actions(cls):
@@ -464,7 +468,7 @@ class Initializer:
                 "Timeseries are supported by MongoDB version 5 and higher"
             )
 
-        # create motor collection
+        # create pymongo collection
         if (
             document_settings.timeseries is not None
             and document_settings.name
@@ -486,12 +490,12 @@ class Initializer:
         """
         Async indexes initializer
         """
-        collection = cls.get_motor_collection()
+        collection = cls.get_pymongo_collection()
         document_settings = cls.get_settings()
 
         index_information = await collection.index_information()
 
-        old_indexes = IndexModelField.from_motor_index_information(
+        old_indexes = IndexModelField.from_pymongo_index_information(
             index_information
         )
         new_indexes = []
@@ -599,7 +603,8 @@ class Initializer:
                 cls._inheritance_inited = True
 
             await self.init_document_collection(cls)
-            await self.init_indexes(cls, self.allow_index_dropping)
+            if not self.skip_indexes:
+                await self.init_indexes(cls, self.allow_index_dropping)
             self.init_document_fields(cls)
             self.init_cache(cls)
             self.init_actions(cls)
@@ -661,8 +666,8 @@ class Initializer:
         if inspect.isclass(view_settings.source):
             view_settings.source = view_settings.source.get_collection_name()
 
-        view_settings.motor_db = self.database
-        view_settings.motor_collection = self.database[view_settings.name]
+        view_settings.pymongo_db = self.database
+        view_settings.pymongo_collection = self.database[view_settings.name]
 
     async def init_view(self, cls: Type[View]):
         """
@@ -681,7 +686,7 @@ class Initializer:
         )
         if self.recreate_views or cls._settings.name not in collection_names:
             if cls._settings.name in collection_names:
-                await cls.get_motor_collection().drop()
+                await cls.get_pymongo_collection().drop()
 
             await self.database.command(
                 {
@@ -704,8 +709,8 @@ class Initializer:
         if cls._settings.name is None:
             cls._settings.name = cls.__name__
 
-        cls._settings.motor_db = self.database
-        cls._settings.motor_collection = self.database[cls._settings.name]
+        cls._settings.pymongo_db = self.database
+        cls._settings.pymongo_collection = self.database[cls._settings.name]
         cls._is_inited = True
 
     # Deprecations
@@ -748,27 +753,27 @@ class Initializer:
 
 
 async def init_beanie(
-    database: AsyncIOMotorDatabase = None,
+    database: Optional[AsyncDatabase] = None,
     connection_string: Optional[str] = None,
     document_models: Optional[
-        List[Union[Type[Document], Type["View"], str]]
+        Sequence[Union[Type[Document], Type[UnionDoc], Type["View"], str]]
     ] = None,
     allow_index_dropping: bool = False,
     recreate_views: bool = False,
-    multiprocessing_mode: bool = False,
+    skip_indexes: bool = False,
 ):
     """
     Beanie initialization
 
-    :param database: AsyncIOMotorDatabase - motor database instance
-    :param connection_string: str - MongoDB connection string
-    :param document_models: List[Union[Type[DocType], str]] - model classes
-    or strings with dot separated paths
+    :param database: Optional[AsyncDatabase] - pymongo database instance. Defaults to None.
+    :param connection_string: Optional[str] - MongoDB connection string.  Defaults to None.
+    :param document_models: List[Union[Type[DocType], Type[UnionDocType], str]] - model classes
+        or strings with dot separated paths. Defaults to None.
     :param allow_index_dropping: bool - if index dropping is allowed.
-    Default False
-    :param recreate_views: bool - if views should be recreated. Default False
-    :param multiprocessing_mode: bool - if multiprocessing mode is on
-        it will patch the motor client to use process's event loop. Default False
+        Defaults to False.
+    :param recreate_views: bool - if views should be recreated. Defaults to False.
+    :param skip_indexes: bool - if you want to skip working with the indexes.
+        Defaults to False.
     :return: None
     """
 
@@ -778,5 +783,5 @@ async def init_beanie(
         document_models=document_models,
         allow_index_dropping=allow_index_dropping,
         recreate_views=recreate_views,
-        multiprocessing_mode=multiprocessing_mode,
+        skip_indexes=skip_indexes,
     )

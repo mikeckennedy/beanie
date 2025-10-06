@@ -9,7 +9,9 @@ To create a new migration, run:
 beanie new-migration -n migration_name -p relative/path/to/migrations/directory/
 ```
 
-It will create a file named `*_migration_name.py` in the directory `relative/path/to/migrations/directory/`
+It will create a file named `YYYYMMDDHHMMSS_migration_name.py` in the directory `relative/path/to/migrations/directory/` (e.g. `20240315123456_migration_name.py`).
+
+> **Note**: Migrations are executed in alphabetical order based on their filenames. While you can name migration files anything, it's recommended to keep the generated timestamp or use explicit ordering numbers (like `001_`, `002_`, etc.). Files starting with underscore (`_`) are ignored by the migration system (e.g. `__init__.py`).
 
 Migration file contains two classes: `Forward` and `Backward`. 
 Each one contains instructions to roll migration respectively forward and backward.
@@ -21,25 +23,25 @@ Each one contains instructions to roll migration respectively forward and backwa
 To roll one forward migration, run:
 
 ```shell
-beanie migrate -uri 'mongodb+srv://user:pass@host/db' -p relative/path/to/migrations/directory/ --distance 1
+beanie migrate -uri 'mongodb+srv://user:pass@host' -db db -p relative/path/to/migrations/directory/ --distance 1
 ```
 
 To roll all forward migrations, run:
 
 ```shell
-beanie migrate -uri 'mongodb://user:pass@host' -db db -p relative/path/to/migrations/directory/
+beanie migrate -uri 'mongodb+srv://user:pass@host' -db db -p relative/path/to/migrations/directory/
 ```
 
 To roll one backward migration, run:
 
 ```shell
-beanie migrate -uri 'mongodb+srv://user:pass@host/db' -p relative/path/to/migrations/directory/ --distance 1 --backward
+beanie migrate -uri 'mongodb+srv://user:pass@host' -db db -p relative/path/to/migrations/directory/ --distance 1 --backward
 ```
 
 To roll all backward migrations, run:
 
 ```shell
-beanie migrate -uri 'mongodb+srv://user:pass@host/db' -p relative/path/to/migrations/directory/ --backward
+beanie migrate -uri 'mongodb+srv://user:pass@host' -db db -p relative/path/to/migrations/directory/ --backward
 ```
 
 To show the help message with all the parameters and descriptions, run:
@@ -96,7 +98,7 @@ class Note(Document):
 
 ```
 
-To migrate from `OldNote` to `Note`, file `name` has to be renamed to `title`.
+To migrate from `OldNote` to `Note`, field `name` has to be renamed to `title`.
 
 Forward migration:
 
